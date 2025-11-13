@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -15,7 +9,218 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Status {
+model users {
+  id_user       Int            @id @default(autoincrement())
+  id_profession Int
+  id_gender     Int
+  id_role       Int
+  id_city       Int
+  first_name    String
+  last_name     String
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  email         String         @unique
+  password_hash String
+  date_of_birth String
+  phone_number  String?
+  events        events[]
+  experiences   experiences[]
+  goals         goals[]
+  postulations  postulations[]
+  sessions      sessions[]
+  skills        skills[]
+  tasks         tasks[]
+  city          cities         @relation(fields: [id_city], references: [id_city])
+  gender        genders        @relation(fields: [id_gender], references: [id_gender])
+  profession    professions    @relation(fields: [id_profession], references: [id_profession])
+  role          roles          @relation(fields: [id_role], references: [id_role])
+}
+
+model genders {
+  id_gender Int     @id @default(autoincrement())
+  gender    String
+  users     users[]
+}
+
+model roles {
+  id_role         Int               @id @default(autoincrement())
+  role            String
+  description     String
+  role_permission role_permission[]
+  users           users[]
+}
+
+model permissions {
+  id_permission   Int               @id @default(autoincrement())
+  permission      String
+  description     String
+  role_permission role_permission[]
+}
+
+model sessions {
+  id_session Int      @id @default(autoincrement())
+  id_user    Int
+  token      String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  expires_at DateTime
+  user       users    @relation(fields: [id_user], references: [id_user])
+}
+
+model countries {
+  id_country Int      @id @default(autoincrement())
+  country    String
+  zip_code   String
+  states     states[]
+}
+
+model states {
+  id_state   Int       @id @default(autoincrement())
+  id_country Int
+  state      String
+  cities     cities[]
+  country    countries @relation(fields: [id_country], references: [id_country])
+}
+
+model cities {
+  id_city  Int     @id @default(autoincrement())
+  id_state Int
+  city     String
+  state    states  @relation(fields: [id_state], references: [id_state])
+  users    users[]
+}
+
+model scripts {
+  id_script Int    @id @default(autoincrement())
+  id_board  Int
+  script    String
+  board     boards @relation(fields: [id_board], references: [id_board])
+}
+
+model professions {
+  id_profession Int     @id @default(autoincrement())
+  profession    String
+  users         users[]
+}
+
+model positions {
+  id_position Int           @id @default(autoincrement())
+  position    String?
+  experiences experiences[]
+}
+
+model experiences {
+  id_experience    Int                @id @default(autoincrement())
+  id_company       Int?
+  id_position      Int?
+  id_user          Int?
+  start_date       DateTime?
+  end_date         DateTime?
+  current          Boolean?
+  experience       String?
+  experience_skill experience_skill[]
+  company          companies?         @relation(fields: [id_company], references: [id_company])
+  position         positions?         @relation(fields: [id_position], references: [id_position])
+  user             users?             @relation(fields: [id_user], references: [id_user])
+}
+
+model skills {
+  id_skill         Int                @id @default(autoincrement())
+  id_user          Int?
+  id_offer         Int?
+  skill            String?
+  experience_skill experience_skill[]
+  offer            offers?            @relation(fields: [id_offer], references: [id_offer])
+  user             users?             @relation(fields: [id_user], references: [id_user])
+}
+
+model tasks {
+  id_task Int     @id @default(autoincrement())
+  id_user Int
+  task    String?
+  user    users   @relation(fields: [id_user], references: [id_user])
+}
+
+model goals {
+  id_goal Int     @id @default(autoincrement())
+  id_user Int
+  goal    String?
+  user    users   @relation(fields: [id_user], references: [id_user])
+}
+
+model boards {
+  id_board Int       @id @default(autoincrement())
+  board    String?
+  link     String?
+  offers   offers[]
+  scripts  scripts[]
+}
+
+model offers {
+  id_offer     Int            @id @default(autoincrement())
+  id_board     Int?
+  id_company   Int?
+  offer        String?
+  description  String?
+  link         String?
+  salary       String?
+  board        boards?        @relation(fields: [id_board], references: [id_board])
+  company      companies?     @relation(fields: [id_company], references: [id_company])
+  postulations postulations[]
+  skills       skills[]
+}
+
+model companies {
+  id_company  Int           @id @default(autoincrement())
+  company     String?
+  link        String?
+  experiences experiences[]
+  offers      offers[]
+}
+
+model postulations {
+  id_postulation Int       @id @default(autoincrement())
+  id_user        Int?
+  id_offer       Int?
+  date           DateTime?
+  status         status
+  events         events[]
+  offer          offers?   @relation(fields: [id_offer], references: [id_offer])
+  user           users?    @relation(fields: [id_user], references: [id_user])
+}
+
+model events {
+  id_event       Int           @id @default(autoincrement())
+  id_user        Int
+  id_postulation Int?
+  event          type_events
+  start_date     DateTime
+  end_date       DateTime
+  postulation    postulations? @relation(fields: [id_postulation], references: [id_postulation])
+  user           users         @relation(fields: [id_user], references: [id_user])
+}
+
+model experience_skill {
+  A           Int
+  B           Int
+  experiences experiences @relation(fields: [A], references: [id_experience], onDelete: Cascade, map: "_experiencesToskills_A_fkey")
+  skills      skills      @relation(fields: [B], references: [id_skill], onDelete: Cascade, map: "_experiencesToskills_B_fkey")
+
+  @@id([A, B], map: "_experiencesToskills_AB_pkey")
+  @@index([B], map: "_experiencesToskills_B_index")
+}
+
+model role_permission {
+  A           Int
+  B           Int
+  permissions permissions @relation(fields: [A], references: [id_permission], onDelete: Cascade, map: "_permissionsToroles_A_fkey")
+  roles       roles       @relation(fields: [B], references: [id_role], onDelete: Cascade, map: "_permissionsToroles_B_fkey")
+
+  @@id([A, B], map: "_permissionsToroles_AB_pkey")
+  @@index([B], map: "_permissionsToroles_B_index")
+}
+
+enum status {
   APPLIED
   INTERVIEW
   REJECTED
@@ -23,223 +228,9 @@ enum Status {
   ACCEPTED
 }
 
-enum TypeEvent {
+enum type_events {
   INTERVIEW
   MEETING
   REMINDER
   FOLLOW_UP
-}
-
-model User {
-  id_user        Int          @id @default(autoincrement())
-  id_profession  Int
-  id_gender      Int
-  id_role        Int
-  id_city        Int
-  first_name     String
-  last_name      String
-  created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
-  email          String       @unique
-  password_hash  String
-  date_of_birth  String
-  phone_number   String?
-  
-  profession     Profession   @relation(fields: [id_profession], references: [id_profession])
-  gender         Gender       @relation(fields: [id_gender], references: [id_gender])
-  role           Role         @relation(fields: [id_role], references: [id_role])
-  city           City         @relation(fields: [id_city], references: [id_city])
-  sessions       Session[]
-  experiences    Experience[]
-  skills         Skill[]
-  tasks          Task[]
-  goals          Goal[]
-  postulations   Postulation[]
-  events         Event[]
-}
-
-model Gender {
-  id_gender Int    @id @default(autoincrement())
-  gender    String
-  
-  users User[]
-}
-
-model Role {
-  id_role      Int          @id @default(autoincrement())
-  role         String
-  description  String
-  
-  users       User[]
-  permissions Permission[]
-}
-
-model Permission {
-  id_permission Int    @id @default(autoincrement())
-  permission    String
-  description   String
-  
-  roles Role[]
-}
-
-model Session {
-  id_session Int      @id @default(autoincrement())
-  id_user    Int
-  token      String   @unique
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  expires_at DateTime
-  
-  user User @relation(fields: [id_user], references: [id_user])
-}
-
-// Location models
-model Country {
-  id_country Int     @id @default(autoincrement())
-  country    String
-  zip_code   String
-  
-  states State[]
-}
-
-model State {
-  id_state   Int    @id @default(autoincrement())
-  id_country Int
-  state      String
-  
-  country Country @relation(fields: [id_country], references: [id_country])
-  cities   City[]
-}
-
-model City {
-  id_city  Int    @id @default(autoincrement())
-  id_state Int
-  city     String
-  
-  state State @relation(fields: [id_state], references: [id_state])
-  users User[]
-}
-
-// Tracking job models
-model Script {
-  id_script Int    @id @default(autoincrement())
-  id_board  Int
-  script    String
-  
-  board Board @relation(fields: [id_board], references: [id_board])
-}
-
-model Profession {
-  id_profession Int    @id @default(autoincrement())
-  profession    String
-  
-  users User[]
-}
-
-model Position {
-  id_position Int    @id @default(autoincrement())
-  position    String?
-  
-  experiences Experience[]
-}
-
-model Experience {
-  id_experience Int      @id @default(autoincrement())
-  id_company    Int?
-  id_position   Int?
-  id_user       Int?
-  start_date    DateTime?
-  end_date      DateTime?
-  current       Boolean?
-  experience    String?
-  
-  company  Company?  @relation(fields: [id_company], references: [id_company])
-  position Position? @relation(fields: [id_position], references: [id_position])
-  user     User?     @relation(fields: [id_user], references: [id_user])
-  skills   Skill[]
-}
-
-model Skill {
-  id_skill   Int    @id @default(autoincrement())
-  id_user    Int?
-  id_offer   Int?
-  skill      String?
-  
-  user       User?        @relation(fields: [id_user], references: [id_user])
-  offer      Offer?       @relation(fields: [id_offer], references: [id_offer])
-  experiences Experience[]
-}
-
-model Task {
-  id_task Int    @id @default(autoincrement())
-  id_user Int
-  task    String?
-  
-  user User @relation(fields: [id_user], references: [id_user])
-}
-
-model Goal {
-  id_goal Int    @id @default(autoincrement())
-  id_user Int
-  goal    String?
-  
-  user User @relation(fields: [id_user], references: [id_user])
-}
-
-model Board {
-  id_board Int     @id @default(autoincrement())
-  board    String?
-  link     String?
-  
-  scripts Script[]
-  offers  Offer[]
-}
-
-model Offer {
-  id_offer     Int           @id @default(autoincrement())
-  id_board     Int?
-  id_company   Int?
-  offer        String?
-  description  String?
-  link         String?
-  salary       String?
-  
-  board        Board?        @relation(fields: [id_board], references: [id_board])
-  company      Company?      @relation(fields: [id_company], references: [id_company])
-  skills       Skill[]
-  postulations Postulation[]
-}
-
-model Company {
-  id_company Int     @id @default(autoincrement())
-  company    String?
-  link       String?
-  
-  offers       Offer[]
-  experiences Experience[]
-}
-
-model Postulation {
-  id_postulation Int      @id @default(autoincrement())
-  id_user        Int?
-  id_offer       Int?
-  date           DateTime?
-  status         Status
-  
-  user      User?    @relation(fields: [id_user], references: [id_user])
-  offer     Offer?   @relation(fields: [id_offer], references: [id_offer])
-  events    Event[]
-}
-
-// Calendar models
-model Event {
-  id_event        Int        @id @default(autoincrement())
-  id_user         Int
-  id_postulation  Int?
-  event           TypeEvent
-  start_date      DateTime
-  end_date        DateTime
-  
-  user        User        @relation(fields: [id_user], references: [id_user])
-  postulation Postulation? @relation(fields: [id_postulation], references: [id_postulation])
 }
